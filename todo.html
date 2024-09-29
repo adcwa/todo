@@ -1,0 +1,149 @@
+<!-- 用html，css，bootstrap，javascript写一个todo的界面
+界面需要简洁
+可以切换白天黑夜模式
+需要美观，参考material风格
+数据需要存在本地
+提供增删改功能 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .todo-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .todo-item .material-icons {
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .todo-text {
+            flex-grow: 1;
+        }
+        .todo-edit {
+            display: none;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Todo App</h1>
+        <div class="mb-3">
+            <button id="toggleMode" class="btn btn-outline-primary">
+                <i class="material-icons">brightness_medium</i>
+            </button>
+            <button id="clearAll" class="btn btn-outline-danger ms-2">Clear All</button>
+        </div>
+        <div class="input-group mb-3">
+            <input type="text" id="todoInput" class="form-control" placeholder="Add a new todo">
+            <button class="btn btn-primary" id="addTodo">Add</button>
+        </div>
+        <ul id="todoList" class="list-group"></ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const todoInput = document.getElementById('todoInput');
+        const addTodoBtn = document.getElementById('addTodo');
+        const todoList = document.getElementById('todoList');
+        const toggleModeBtn = document.getElementById('toggleMode');
+        const clearAllBtn = document.getElementById('clearAll');
+
+        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+        function renderTodos() {
+            todoList.innerHTML = '';
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item todo-item';
+                li.innerHTML = `
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${index})">
+                    <span class="todo-text">${todo.text}</span>
+                    <input type="text" class="form-control todo-edit" value="${todo.text}">
+                    <i class="material-icons edit-icon" onclick="editTodo(${index})">edit</i>
+                    <i class="material-icons" onclick="deleteTodo(${index})">delete</i>
+                `;
+                todoList.appendChild(li);
+            });
+            saveTodos();
+        }
+
+        function addTodo() {
+            const todoText = todoInput.value.trim();
+            if (todoText) {
+                todos.push({ text: todoText, completed: false });
+                todoInput.value = '';
+                renderTodos();
+            }
+        }
+
+        function toggleTodo(index) {
+            todos[index].completed = !todos[index].completed;
+            renderTodos();
+        }
+
+        function editTodo(index) {
+            const todoItem = todoList.children[index];
+            const todoText = todoItem.querySelector('.todo-text');
+            const todoEdit = todoItem.querySelector('.todo-edit');
+            const editIcon = todoItem.querySelector('.edit-icon');
+
+            if (todoText.style.display !== 'none') {
+                todoText.style.display = 'none';
+                todoEdit.style.display = 'block';
+                todoEdit.focus();
+                editIcon.textContent = 'done';
+            } else {
+                todoText.style.display = 'block';
+                todoEdit.style.display = 'none';
+                todos[index].text = todoEdit.value.trim();
+                editIcon.textContent = 'edit';
+                renderTodos();
+            }
+        }
+
+        function deleteTodo(index) {
+            todos.splice(index, 1);
+            renderTodos();
+        }
+
+        function saveTodos() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function clearAllTodos() {
+            todos = [];
+            renderTodos();
+        }
+
+        addTodoBtn.addEventListener('click', addTodo);
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTodo();
+        });
+        toggleModeBtn.addEventListener('click', toggleDarkMode);
+        clearAllBtn.addEventListener('click', clearAllTodos);
+
+        renderTodos();
+    </script>
+</body>
+</html>
